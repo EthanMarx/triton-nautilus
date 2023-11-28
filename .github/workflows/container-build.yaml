@@ -29,5 +29,5 @@ jobs:
       with:
         context: .
         push: true
-        tags: ${{ env.REGISTRY }}/triton-nautilus/hermes:latest
+        tags: ${{ env.REGISTRY }}/ethanmarx/triton-hermes:latest
 

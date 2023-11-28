@@ -6,6 +6,8 @@ authors = ["Ethan Jacob Marx <ethan.marx@ligo.org>"]
 license = "MIT"
 
 [tool.poetry.scripts]
+export-and-launch-triton = "triton_nautilus.main:main"
+
 
 [tool.poetry.dependencies]
 python = ">=3.8,<3.11"

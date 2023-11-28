@@ -4,6 +4,7 @@ from typing import Callable, Optional
 
 import torch
 from export.snapshotter import add_streaming_input_preprocessor
+from export import configure_logging
 
 import hermes.quiver as qv
 
@@ -33,7 +34,6 @@ def main(
     psd_length: float,
     fftlength: Optional[float] = None,
     highpass: Optional[float] = None,
-    weights: Optional[Path] = None,
     streams_per_gpu: int = 1,
     aframe_instances: Optional[int] = None,
     platform: qv.Platform = qv.Platform.ONNX,
@@ -104,21 +104,8 @@ def main(
     # make relevant directories
     logdir.mkdir(exist_ok=True, parents=True)
     configure_logging(logdir / "export.log", verbose)
-
-    # instantiate a new, randomly initialized version
-    # of the network architecture, including preprocessor
-    logging.info("Initializing model architecture")
-    logging.info(f"Initialize:\n{nn}")
-
-    # load in a set of trained weights
-    if weights is not None:
-        # Read model weights if specified
-        if weights.is_dir():
-            weights = weights / "weights.pt"
-        if not weights.exists():
-            raise FileNotFoundError(f"No weights file '{weights}'")
-        logging.info(f"Loading parameters from {weights}")
-        state_dict = torch.jit.load(weights, map_location="cpu")
+    logging.info("Loading model weights")
+    nn = torch.jit.load(weights, map_location="cpu")
 
     # instantiate a model repository at the
     # indicated location. Split up the preprocessor
