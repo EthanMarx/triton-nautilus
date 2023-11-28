@@ -1,5 +1,5 @@
 Bootstrap: docker
-From: nvcr.io/nvidia/tritonserver:22.12
+From: nvcr.io/nvidia/tritonserver:22.12-py3
 Stage: build
 
 %files
