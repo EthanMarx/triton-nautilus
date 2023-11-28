@@ -1,9 +1,3 @@
-# workflow that builds docker container images
-# from the singularity apptainer definition files
-# we use for local development. Uses tar archives
-# to convert between the formats in order to handle
-# the large memory footprints of our containers without
-# toppling over the GitHub runner nodes this executes on.
 name: container-build 
 on: push
 env:
@@ -29,31 +23,11 @@ jobs:
         registry: ${{ env.REGISTRY }}
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
-
-    # build the singularity image as a sandbox directory
-    # inside a docker container that has singularity
-    # installed (take a big breath). Then tar that directory
-    # so that we can import it into docker. Doing everything
-    # in one fell swoop because of permissions discrepancies
-    # inside and outside the container.
-    -
-      name: Build singularity image
-      run: |
-        docker run \
-          --rm \
-          -v ${{ github.workspace }}:/opt/triton-nautilus \
-          --workdir /opt/triton-nautilus/ \
-          --privileged \
-          --entrypoint /bin/bash \
-          quay.io/singularity/singularity:v3.8.1 \
-          -c 'singularity build --sandbox /tmp/app apptainer.def && tar -czf /opt/triton-nautilus/app.tar.gz -C /tmp/app .'
-
-    # now copy the fs contents into an empty
-    # container and push it to the registry
     - 
-      name: build docker image
-      env:
-        tag: ${{ env.REGISTRY }}/ethanmarx/triton-nautilus/hermes:latest
-      run: |
-        cat app.tar.gz | docker import --change "ENV PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" - ${{ env.tag }}
-        docker push ${{env.tag }}
+      name: Build and push container image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        push: true
+        tags: ${{ env.REGISTRY }}/triton-nautilus/hermes:latest
+
