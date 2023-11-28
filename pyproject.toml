@@ -14,6 +14,7 @@ python = ">=3.8,<3.11"
 
 torch = {version = "^1.10", source = "torch"}
 s3fs = "^2023.10.0"
+ml4gw = "^0.2.0"
 
 [tool.poetry.dependencies."hermes.quiver"]
 path = "./hermes/hermes/hermes.quiver"

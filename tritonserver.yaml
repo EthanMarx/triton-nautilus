@@ -4,7 +4,7 @@ metadata:
   name: triton-servers 
   namespace: bbhnet 
 spec:
-  replicas: 4 
+  replicas: 1
   selector:
     matchLabels:
       app: triton-servers 
@@ -19,22 +19,15 @@ spec:
         fsGroup: 1000
       containers:
       - name: tritonserver
-        image: nvcr.io/nvidia/tritonserver:22.12
+        image: ghcr.io/ethanmarx/triton-hermes:latest
         env:
         - name: EXTRA_NV_PATHS
           value: /usr/local/nvidia/lib64:/usr/local/nvidia/bin
         command:
-        - /bin/bash
-        args:
-        - -c
-        - >-
-          LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$EXTRA_NV_PATHS" bin/tritonserver
-          --model-repository /home/ethanmarx/model_repo # fix me 
-          --repository-poll-secs 30
-          --model-control-mode explicit
+        - export-and-launch-triton
         resources:
           limits:
-            nvidia.com/gpu: 8 
+            nvidia.com/gpu: 1
         ports:
         - containerPort: 8000
           name: http
@@ -61,17 +54,20 @@ spec:
           httpGet:
             path: /v2/health/ready
             port: http
-      - name: export
-        image: ghcr.io/ethanmarx/triton-nautilus/hermes:latest
-        command: [export]
-        args: []
+        resources:
+          limits:
+            cpu: "1"
+            memory: "10G"
+          requests:
+            cpu: "1"
+            memory: "10G"
 
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: triton-server 
-  namespace: default
+  namespace: bbhnet
 spec:
   ports:
   - name: http-triton

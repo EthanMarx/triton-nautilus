@@ -1,9 +1,70 @@
 from typing import TYPE_CHECKING, Optional
+import torch
 
-from aframe.architectures.preprocessor import (
-    BackgroundSnapshotter,
-    BatchWhitener,
-)
+from ml4gw.transforms import SpectralDensity, Whiten
+from ml4gw.utils.slicing import unfold_windows
+
+class BatchWhitener(torch.nn.Module):
+    """Calculate the PSDs and whiten an entire batch of kernels at once"""
+
+    def __init__(
+        self,
+        kernel_length: float,
+        sample_rate: float,
+        inference_sampling_rate: float,
+        batch_size: int,
+        fduration: float,
+        fftlength: float,
+        highpass: Optional[float] = None,
+    ) -> None:
+        super().__init__()
+        self.stride_size = int(sample_rate / inference_sampling_rate)
+        self.kernel_size = int(kernel_length * sample_rate)
+
+        # do foreground length calculation in units of samples,
+        # then convert back to length to guard for intification
+        strides = (batch_size - 1) * self.stride_size
+        fsize = int(fduration * sample_rate)
+        size = strides + self.kernel_size + fsize
+        length = size / sample_rate
+        self.psd_estimator = PsdEstimator(
+            length,
+            sample_rate,
+            fftlength=fftlength,
+            overlap=None,
+            average="mean",
+            fast=highpass is not None,
+        )
+        self.whitener = Whiten(fduration, sample_rate, highpass)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        x, psd = self.psd_estimator(x)
+        x = self.whitener(x.double(), psd)
+        x = unfold_windows(x, self.kernel_size, self.stride_size)
+        return x[:, 0]
+    
+class BackgroundSnapshotter(torch.nn.Module):
+    """Update a kernel with a new piece of streaming data"""
+
+    def __init__(
+        self,
+        psd_length,
+        kernel_length,
+        fduration,
+        sample_rate,
+        inference_sampling_rate,
+    ) -> None:
+        super().__init__()
+        state_length = kernel_length + fduration + psd_length
+        state_length -= 1 / inference_sampling_rate
+        self.state_size = int(state_length * sample_rate)
+
+    def forward(
+        self, update: torch.Tensor, snapshot: torch.Tensor
+    ) -> Tuple[torch.Tensor, ...]:
+        x = torch.cat([snapshot, update], axis=-1)
+        snapshot = x[:, :, -self.state_size :]
+        return x, snapshot
 from hermes.quiver import Platform
 from hermes.quiver.streaming import utils as streaming_utils
 

@@ -11,6 +11,7 @@ def main(
     num_ifos = 2,
     bucket = "triton-nautilus"
 ):
+
     kernel_size = sample_rate * kernel_length
     sample_input = torch.rand(batch_size, num_ifos, kernel_size)
     nn = ResNet(num_ifos=2, layers=[3, 4, 6, 3], norm_groups = 16)
