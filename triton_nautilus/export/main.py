@@ -4,7 +4,7 @@ from typing import Optional
 
 import torch
 from .snapshotter import add_streaming_input_preprocessor
-
+from triton_nautilus.export import configure_logging
 import hermes.quiver as qv
 
 def scale_model(model, instances):
