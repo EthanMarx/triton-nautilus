@@ -3,7 +3,9 @@ import torch
 import s3fs
 
 
-# load model, convert to torch script, and send to s3 bucket on nautilus
+# load dummy model, 
+# convert to torch script, 
+# and send to s3 bucket on nautilus
 def main(
     sample_rate = 2048,
     kernel_length = 16,
