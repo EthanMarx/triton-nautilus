@@ -62,9 +62,10 @@ spec:
             path: /v2/health/ready
             port: http
       - name: export
-        image: hermes/
-        command: 
-        args:
+        image: ghcr.io/ethanmarx/triton-nautilus/hermes:latest
+        command: [export]
+        args: []
+
 ---
 apiVersion: v1
 kind: Service

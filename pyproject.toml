@@ -33,6 +33,7 @@ cryptography = "<38.0"
 tensorrt = "8.5.1.7"
 
 torch = {version = "^1.10", source = "torch"}
+s3fs = "^2023.10.0"
 [tool.poetry.dependencies."hermes.quiver"]
 path = "./hermes/hermes/hermes.quiver"
 
