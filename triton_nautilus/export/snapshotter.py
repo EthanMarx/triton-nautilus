@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING, Optional
 import torch
-
+from typing import Tuple
 from ml4gw.transforms import SpectralDensity, Whiten
 from ml4gw.utils.slicing import unfold_windows
 

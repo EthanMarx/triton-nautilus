@@ -9,7 +9,7 @@ if TYPE_CHECKING:
     import hermes.quiver as qv
 
 def main(
-    weights: Path,
+    weights: str = "s3://triton-nautilus/model.pt",
     repository_directory: str = "/tmp/model_repo",
     logdir: str = "/tmp/model_repo/logs",
     num_ifos: int = 2,
