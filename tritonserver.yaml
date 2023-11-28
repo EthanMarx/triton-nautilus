@@ -1,0 +1,91 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: triton-servers 
+  namespace: bbhnet 
+spec:
+  replicas: 4 
+  selector:
+    matchLabels:
+      app: triton-servers 
+  progressDeadlineSeconds: 100
+  template:
+    metadata:
+      labels:
+        app: triton-servers 
+    spec:
+      securityContext:
+        runAsUser: 1000
+        fsGroup: 1000
+      containers:
+      - name: tritonserver
+        image: nvcr.io/nvidia/tritonserver:22.12
+        env:
+        - name: EXTRA_NV_PATHS
+          value: /usr/local/nvidia/lib64:/usr/local/nvidia/bin
+        command:
+        - /bin/bash
+        args:
+        - -c
+        - >-
+          LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$EXTRA_NV_PATHS" bin/tritonserver
+          --model-repository /home/ethanmarx/model_repo # fix me 
+          --repository-poll-secs 30
+          --model-control-mode explicit
+        resources:
+          limits:
+            nvidia.com/gpu: 8 
+        ports:
+        - containerPort: 8000
+          name: http
+        - containerPort: 8001
+          name: grpc
+        - containerPort: 8002
+          name: metrics
+        livenessProbe:
+          failureThreshold: 30
+          initialDelaySeconds: 100
+          periodSeconds: 5
+          httpGet:
+            path: /v2/health/live
+            port: http
+        startupProbe:
+          failureThreshold: 30
+          periodSeconds: 10
+          httpGet:
+            path: /v2/health/ready
+            port: http
+        readinessProbe:
+          failureThreshold: 30
+          periodSeconds: 10
+          httpGet:
+            path: /v2/health/ready
+            port: http
+      - name: export
+        image: hermes/
+        command: 
+        args:
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: triton-server 
+  namespace: default
+spec:
+  ports:
+  - name: http-triton
+    port: 8000
+    protocol: TCP
+    targetPort: 8000
+  - name: grpc-triton
+    port: 8001
+    protocol: TCP
+    targetPort: 8001
+  - name: metrics-triton
+    port: 8002
+    protocol: TCP
+    targetPort: 8002
+  selector:
+    app: triton-server 
+  sessionAffinity: ClientIP
+  type: LoadBalancer
