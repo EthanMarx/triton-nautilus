@@ -1,11 +1,10 @@
 import torch
 from triton_nautilus.export.main import main as export 
-import subprocess
 from pathlib import Path
 from typing import Optional, TYPE_CHECKING
 import s3fs
 import os
-
+import logging
 import hermes.quiver as qv
 
 def main(
@@ -29,12 +28,11 @@ def main(
 ):
     
     # pull weights via s3
-    s3 = s3fs.S3FileSystem(endpoint_url="https://s3-west.nrp-nautilus.io")
+    s3 = s3fs.S3FileSystem(endpoint_url="http://rook-ceph-rgw-nautiluss3.rook")
     model_dir = Path("/tmp/weights/")
     model_dir.mkdir(parents=True, exist_ok=True)
     local_weights = model_dir / "weights.pt"
     s3.get_file(str(weights), str(local_weights))
-    print(os.path.exists(local_weights))
 
     # first export model to tensorrt, along with 
     # constructing snapshotter and whitener
@@ -57,20 +55,17 @@ def main(
         clean,
         verbose,
     )
-
-    # then run triton serve
+    
+    logging.info("Starting Triton Server")
+    os.environ["LD_LIBRARY_PATH"] = os.environ.get("LD_LIBRARY_PATH", "") + ":" + os.environ.get("EXTRA_NV_PATHS", "")
     command = [
-        "/bin/bash",
-        "-c", 
-        "LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$EXTRA_NV_PATHS", 
-        "bin/tritonserver",
+        "tritonserver", 
         "--model-repository", 
-        "/tmp/model_repo",
-        "--repository-poll-secs",
+        "/tmp/model_repo", 
+        "--repository-poll-secs", 
         "30", 
-        "--model-control-mode",
+        "--model-control-mode", 
         "explicit"
     ]
-
-    output = subprocess.run(command, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-
+    
+    os.execvp(command[0], command)
