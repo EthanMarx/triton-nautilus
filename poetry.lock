@@ -271,7 +271,7 @@ description = "Model export utilities"
 category = "main"
 optional = false
 python-versions = ">=3.8,<3.12"
-develop = false
+develop = true
 
 [package.dependencies]
 protobuf = "^3.17"
@@ -717,7 +717,7 @@ testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.8,<3.11"
-content-hash = "d02c5725155545bb84109405ab8df75407b74ff0448fb8c4ed6cab87ed4f75e0"
+content-hash = "a9ea041822e2fc35fac5fa0353489b50832b950c5213396d0006260f3dd19c4d"
 
 [metadata.files]
 aiobotocore = [

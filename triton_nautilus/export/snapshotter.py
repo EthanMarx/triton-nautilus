@@ -3,7 +3,41 @@ import torch
 from typing import Tuple
 from ml4gw.transforms import SpectralDensity, Whiten
 from ml4gw.utils.slicing import unfold_windows
+from hermes.quiver import Platform
+from hermes.quiver.streaming import utils as streaming_utils
 
+if TYPE_CHECKING:
+    from hermes.quiver.model import EnsembleModel, ExposedTensor
+    
+class PsdEstimator(torch.nn.Module):
+    """
+    Module that takes a sample of data, splits it into
+    a `background_length`-second section of data and the,
+    remainder, calculates the PSD of the first section,
+    and returns the PSD and the remainder.
+    """
+
+    def __init__(
+        self,
+        length: float,
+        sample_rate: float,
+        fftlength: float,
+        overlap: Optional[float] = None,
+        average: str = "mean",
+        fast: bool = True,
+    ) -> None:
+        super().__init__()
+        self.size = int(length * sample_rate)
+        self.spectral_density = SpectralDensity(
+            sample_rate, fftlength, overlap, average, fast=fast
+        )
+
+    def forward(self, X: torch.Tensor) -> torch.Tensor:
+        splits = [X.size(-1) - self.size, self.size]
+        background, X = torch.split(X, splits, dim=-1)
+        psds = self.spectral_density(background.double())
+        return X, psds
+    
 class BatchWhitener(torch.nn.Module):
     """Calculate the PSDs and whiten an entire batch of kernels at once"""
 
@@ -65,11 +99,7 @@ class BackgroundSnapshotter(torch.nn.Module):
         x = torch.cat([snapshot, update], axis=-1)
         snapshot = x[:, :, -self.state_size :]
         return x, snapshot
-from hermes.quiver import Platform
-from hermes.quiver.streaming import utils as streaming_utils
 
-if TYPE_CHECKING:
-    from hermes.quiver.model import EnsembleModel, ExposedTensor
 
 
 def add_streaming_input_preprocessor(

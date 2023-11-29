@@ -34,8 +34,8 @@ def main(
     highpass: Optional[float] = None,
     streams_per_gpu: int = 1,
     aframe_instances: Optional[int] = None,
-    platform: qv.Platform = qv.Platform.ONNX,
-    clean: bool = False,
+    platform: qv.Platform = qv.Platform.TENSORRT,
+    clean: bool = True,
     verbose: bool = False,
     **kwargs,
 ) -> None:
@@ -103,7 +103,9 @@ def main(
     logdir.mkdir(exist_ok=True, parents=True)
     configure_logging(logdir / "export.log", verbose)
     logging.info("Loading model weights")
-    nn = torch.jit.load(weights, map_location="cpu")
+    print(weights)
+    print('repository_directory', repository_directory)
+    nn = torch.jit.load(weights)
 
     # instantiate a model repository at the
     # indicated location. Split up the preprocessor
@@ -131,7 +133,6 @@ def main(
     kwargs = {}
     if platform == qv.Platform.ONNX:
         kwargs["opset_version"] = 13
-
         # turn off graph optimization because of this error
         # https://github.com/triton-inference-server/server/issues/3418
         aframe.config.optimization.graph.level = -1

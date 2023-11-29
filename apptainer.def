@@ -6,5 +6,5 @@ Stage: build
 . /opt/triton-nautilus/
 
 %post
-cd /opt/triton-nautilus/
-pip install .
+cd /opt/triton-nautilus
+pip install -e . 
