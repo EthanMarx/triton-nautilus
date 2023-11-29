@@ -23,11 +23,22 @@ spec:
         env:
         - name: EXTRA_NV_PATHS
           value: /usr/local/nvidia/lib64:/usr/local/nvidia/bin
+        - name: AWS_ENDPOINT_URL
+          value: "http://rook-ceph-rgw-nautiluss3.rook"
+        envFrom:
+        - secretRef:
+            name: aws-credentials
         command:
         - export-and-launch-triton
         resources:
           limits:
             nvidia.com/gpu: 1
+            cpu: "1"
+            memory: "10G"
+          requests:
+            nvidia.com/gpu: 1
+            cpu: "1"
+            memory: "10G"
         ports:
         - containerPort: 8000
           name: http
@@ -54,19 +65,13 @@ spec:
           httpGet:
             path: /v2/health/ready
             port: http
-        resources:
-          limits:
-            cpu: "1"
-            memory: "10G"
-          requests:
-            cpu: "1"
-            memory: "10G"
+          
 
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: triton-server 
+  name: triton-servers
   namespace: bbhnet
 spec:
   ports:
@@ -83,6 +88,21 @@ spec:
     protocol: TCP
     targetPort: 8002
   selector:
-    app: triton-server 
+    app: triton-servers
   sessionAffinity: ClientIP
   type: LoadBalancer
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: aws-credentials
+type: Opaque
+stringData:
+  aws_access_key_id: 6GXLYAECYYP427N1D6TA
+  aws_secret_access_key: IE3t38QwOuWjPQ1I6T4yXH1sp6DzohKwVEAUVWeG
+  AWS_ACCESS_KEY_ID: 6GXLYAECYYP427N1D6TA
+  AWS_SECRET_ACCESS_KEY: IE3t38QwOuWjPQ1I6T4yXH1sp6DzohKwVEAUVWeG
+
+
+
+

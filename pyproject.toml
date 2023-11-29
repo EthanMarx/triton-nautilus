@@ -16,6 +16,10 @@ torch = {version = "^1.10", source = "torch"}
 s3fs = "^2023.10.0"
 ml4gw = "^0.2.0"
 
+# hard-pin the tensorrt version for compatability with
+# Triton. This corresponds to Triton container 22.12-py3
+tensorrt = "8.5.1.7"
+
 [tool.poetry.dependencies."hermes.quiver"]
 path = "./hermes/hermes/hermes.quiver"
 
@@ -27,5 +31,5 @@ name = "torch"
 url = "https://download.pytorch.org/whl/cpu"
 
 [build-system]
-requires = ["poetry>=1.2"]
-build-backend = "poetry.masonry.api"
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
