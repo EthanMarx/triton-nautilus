@@ -14,6 +14,20 @@ spec:
       labels:
         app: triton-servers 
     spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: nvidia.com/gpu.memory
+                operator: Gt
+                values:
+                - "15000"
+              - key: nvidia.com/gpu.product
+                operator: In
+                values:
+                - NVIDIA-A10
+                - NVIDIA-A40
       securityContext:
         runAsUser: 1000
         fsGroup: 1000
@@ -33,12 +47,12 @@ spec:
         resources:
           limits:
             nvidia.com/gpu: 1
-            cpu: "1"
-            memory: "10G"
+            cpu: "2"
+            memory: "30G"
           requests:
             nvidia.com/gpu: 1
-            cpu: "1"
-            memory: "10G"
+            cpu: "2"
+            memory: "30G"
         ports:
         - containerPort: 8000
           name: http
@@ -48,20 +62,20 @@ spec:
           name: metrics
         livenessProbe:
           failureThreshold: 30
-          initialDelaySeconds: 360
+          initialDelaySeconds: 480
           periodSeconds: 5
           httpGet:
             path: /v2/health/live
             port: http
         startupProbe:
           failureThreshold: 30
-          initialDelaySeconds: 360
+          initialDelaySeconds: 480
           periodSeconds: 10
           httpGet:
             path: /v2/health/ready
             port: http
         readinessProbe:
-          initialDelaySeconds: 360 
+          initialDelaySeconds: 480 
           failureThreshold: 30
           periodSeconds: 10
           httpGet:

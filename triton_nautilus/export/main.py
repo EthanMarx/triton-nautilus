@@ -106,7 +106,7 @@ def main(
     print(weights)
     print('repository_directory', repository_directory)
     nn = torch.jit.load(weights)
-
+    logging.info("weights loaded")
     # instantiate a model repository at the
     # indicated location. Split up the preprocessor
     # and the neural network (which we'll call aframe)
@@ -139,6 +139,7 @@ def main(
     elif platform == qv.Platform.TENSORRT:
         kwargs["use_fp16"] = False
 
+    logging.info(f"Exporting aframe model to {platform}")
     aframe.export_version(
         nn,
         input_shapes={"whitened": input_shape},
@@ -146,6 +147,7 @@ def main(
         **kwargs,
     )
 
+    logging.info(f"Adding preprocessor and snapshotter to ensemble")
     # now try to create an ensemble that has a snapshotter
     # at the front for streaming new data to
     ensemble_name = "aframe-stream"
@@ -193,7 +195,7 @@ def main(
         6e10
     )
     snapshotter.config.write()
-
+    logging.info(f"Export complete!")
 
 if __name__ == "__main__":
     main()
