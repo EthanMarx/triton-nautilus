@@ -63,9 +63,7 @@ def main(
         "--model-repository", 
         "/tmp/model_repo", 
         "--repository-poll-secs", 
-        "30", 
-        "--model-control-mode", 
-        "explicit"
+        "30",
     ]
     
     os.execvp(command[0], command)
